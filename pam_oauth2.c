@@ -132,19 +132,31 @@ static int check_response(const struct response token_info, struct check_tokens 
 
 static int query_token_info(const char * const tokeninfo_url, const char * const authtok, long *response_code, struct response *token_info) {
     int ret = 1;
-    char *url;
+    struct curl_slist *headers = NULL;
+    char *authorization_header;
     CURL *session = curl_easy_init();
+
+    if ((authorization_header = malloc(strlen("Authorization: Bearer ") + strlen(authtok) +1))){
+        strcpy(authorization_header, "Authorization: Bearer ");
+        strcat(authorization_header, authtok);
+    }else{
+        syslog(LOG_AUTH|LOG_DEBUG, "pam_oauth2: authorization : memory allocation failed");
+        return ret;
+    }
 
     if (!session) {
         syslog(LOG_AUTH|LOG_DEBUG, "pam_oauth2: can't initialize curl");
         return ret;
     }
 
-    if ((url = malloc(strlen(tokeninfo_url) + strlen(authtok) + 1))) {
-        strcpy(url, tokeninfo_url);
-        strcat(url, authtok);
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	headers = curl_slist_append(headers, authorization_header);
 
-        curl_easy_setopt(session, CURLOPT_URL, url);
+        curl_easy_setopt(session, CURLOPT_URL, tokeninfo_url);
+	curl_easy_setopt(session, CURLOPT_HTTPHEADER, headers);
+	
+	syslog(LOG_AUTH|LOG_DEBUG, tokeninfo_url);
+
         curl_easy_setopt(session, CURLOPT_WRITEFUNCTION, writefunc);
         curl_easy_setopt(session, CURLOPT_WRITEDATA, token_info);
 
@@ -155,10 +167,7 @@ static int query_token_info(const char * const tokeninfo_url, const char * const
             syslog(LOG_AUTH|LOG_DEBUG, "pam_oauth2: failed to perform curl request");
         }
 
-        free(url);
-    } else {
-        syslog(LOG_AUTH|LOG_DEBUG, "pam_oauth2: memory allocation failed");
-    }
+        free(authorization_header);
 
     curl_easy_cleanup(session);
 
