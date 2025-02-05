@@ -1,4 +1,4 @@
-CFLAGS=-Wall -fPIC -ansi -pedantic
+CFLAGS=-Wall -fPIC -std=gnu99
 LIBDIR=/lib
 
 ifeq ($(shell if uname -o | grep -q "GNU/Linux" ; then echo true; else echo false; fi),true)
@@ -24,5 +24,4 @@ install: pam_oauth2.so
 	install -m 644 $< $(DESTDIR)$(PAM_DIR)
 
 clean:
-	$(MAKE) -C jsmn clean
 	rm -f *.o *.so
