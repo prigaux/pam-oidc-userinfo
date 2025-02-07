@@ -14,12 +14,12 @@ endif
 
 PAM_DIR=$(LIBDIR)/security
 
-all: pam_oauth2.so
+all: pam_oidc_userinfo.so
 
-pam_oauth2.so: pam_oauth2.o
+pam_oidc_userinfo.so: pam_oidc_userinfo.o
 	$(CC) -shared $^ -lcurl -o $@
 
-install: pam_oauth2.so
+install: pam_oidc_userinfo.so
 	install -d $(DESTDIR)$(PAM_DIR)
 	install -m 644 $< $(DESTDIR)$(PAM_DIR)
 
