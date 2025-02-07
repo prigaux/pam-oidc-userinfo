@@ -3,6 +3,8 @@ OIDC/oidc_userinfo PAM module
 
 This PAM module enables login with oidc_userinfo token instead of password.
 
+NB : you must send "Bearer <token>" so that this module knows it really is not a plain password.
+
 ## How to install it:
 
 ```bash
@@ -26,7 +28,7 @@ Lets assume that configuration is looking like:
 auth sufficient pam_oidc_userinfo.so https://oidc.foo.org/userinfo sub "aud":["aud1"] "aud":["aud2"]
 ```
 
-And somebody is trying to login with login=foo and token=bar.
+And somebody is trying to login with login=foo and token="Bearer bar".
 
 pam_oidc_userinfo module will make http request with "Authorization: Bearer bar" and check response code and content.
 
@@ -53,7 +55,7 @@ auth required /home/prigaux/git/pam-oidc-userinfo/pam_oidc_userinfo.so https://o
 ```
 ```
 access_token=ory_at_xxx-xxx-xxx.xxx-xxx-xxx
-echo $access_token | pamtester -v test-oidc-userinfo prigaux authenticate
+echo "Bearer $access_token" | pamtester -v test-oidc-userinfo prigaux authenticate
 ```
 
 ## Links

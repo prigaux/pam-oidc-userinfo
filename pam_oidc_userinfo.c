@@ -60,8 +60,8 @@ static int query_token_info(const char * const tokeninfo_url, const char * const
     char *authorization_header;
     CURL *session = curl_easy_init();
 
-    if ((authorization_header = malloc(strlen("Authorization: Bearer ") + strlen(authtok) +1))){
-        strcpy(authorization_header, "Authorization: Bearer ");
+    if ((authorization_header = malloc(strlen("Authorization: ") + strlen(authtok) +1))){
+        strcpy(authorization_header, "Authorization: ");
         strcat(authorization_header, authtok);
     }else{
         syslog(LOG_AUTH|LOG_DEBUG, "pam_oidc_userinfo: authorization : memory allocation failed");
@@ -147,6 +147,11 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     if (pam_get_authtok(pamh, PAM_AUTHTOK, &authtok, NULL) != PAM_SUCCESS || authtok == NULL || *authtok == '\0') {
         syslog(LOG_AUTH|LOG_DEBUG, "pam_oidc_userinfo: can't get authtok");
         return PAM_AUTHINFO_UNAVAIL;
+    }
+
+    // Abort if the password doesn't match "Bearer xxxx". This speeds things up and avoid uselessly bothering the OIDC server */
+    if (strncmp("Bearer ", authtok, strlen("Bearer ")) != 0) {
+        return PAM_AUTH_ERR;
     }
 
     char *mandatory_substr;
